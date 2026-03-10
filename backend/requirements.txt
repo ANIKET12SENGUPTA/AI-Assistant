@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+ollama
+wikipedia
+duckduckgo-search
+arxiv
+sentence-transformers
+chromadb
+pypdf
