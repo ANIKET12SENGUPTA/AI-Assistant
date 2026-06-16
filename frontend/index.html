@@ -1,34 +1,159 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>AI-Assistant Chatbot</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Assistant Pro</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 </head>
 <body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"/>
+                        <path d="M12 6c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6z"/>
+                    </svg>
+                    <h1>AI Assistant</h1>
+                </div>
+                <div class="header-actions">
+                    <span class="model-display" id="model-display">Model: qwen3:8b</span>
+                    <button class="icon-btn" onclick="openSettings()" title="Settings">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="1"/>
+                            <path d="M12 1v6m0 6v6"/>
+                            <path d="M4.22 4.22l4.24 4.24m5.08 5.08l4.24 4.24"/>
+                            <path d="M1 12h6m6 0h6"/>
+                            <path d="M4.22 19.78l4.24-4.24m5.08-5.08l4.24-4.24"/>
+                        </svg>
+                    </button>
+                    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode">
+                        <svg class="sun-icon" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                            <circle cx="12" cy="12" r="5"/>
+                            <line x1="12" y1="1" x2="12" y2="3"/>
+                            <line x1="12" y1="21" x2="12" y2="23"/>
+                            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+                            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                            <line x1="1" y1="12" x2="3" y2="12"/>
+                            <line x1="21" y1="12" x2="23" y2="12"/>
+                            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+                            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                        </svg>
+                        <svg class="moon-icon" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="display: none;">
+                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </header>
 
-<div class="chat-container">
-    <h1>AI-Assistant Chatbot</h1>
+        <!-- Settings Modal -->
+        <div id="settings-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Settings</h2>
+                    <button class="close-btn" onclick="closeSettings()">×</button>
+                </div>
+                <div class="modal-body">
+                    <!-- Model Selection -->
+                    <div class="settings-section">
+                        <h3>LLM Model</h3>
+                        <p class="settings-desc">Select which model to use for responses</p>
+                        <div class="model-list">
+                            <input type="text" id="model-input" placeholder="Enter model name (e.g., qwen3:8b, phi3:latest)" class="text-input">
+                            <button class="btn btn-primary" onclick="changeModel()">Change Model</button>
+                        </div>
+                        <p id="model-status" class="status-text"></p>
+                    </div>
 
-    <div id="chat-box"></div>
+                    <!-- Document Upload -->
+                    <div class="settings-section">
+                        <h3>Upload Documents</h3>
+                        <p class="settings-desc">Upload PDF files for RAG retrieval</p>
+                        <div class="upload-area" id="upload-area">
+                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                <polyline points="17 8 12 3 7 8"/>
+                                <line x1="12" y1="3" x2="12" y2="15"/>
+                            </svg>
+                            <p>Drag files here or click to upload</p>
+                            <input type="file" id="file-input" accept=".pdf" style="display: none;" onchange="handleFileUpload(event)">
+                        </div>
+                        <p id="upload-status" class="status-text"></p>
+                    </div>
 
-    <div class="input-area">
-        <input type="text" id="user-input" placeholder="Type your message..." />
-        <input type="file" id="file-upload" />
-        <button onclick="sendMessage()">Send</button>
+                    <!-- Export & Clear -->
+                    <div class="settings-section">
+                        <h3>Conversation</h3>
+                        <p class="settings-desc">Export or clear your chat history</p>
+                        <div class="button-group">
+                            <button class="btn btn-secondary" onclick="exportConversation()">📥 Export as JSON</button>
+                            <button class="btn btn-secondary" onclick="exportConversationMarkdown()">📄 Export as Markdown</button>
+                            <button class="btn btn-danger" onclick="clearConversationGlobal()">🗑️ Clear History</button>
+                        </div>
+                    </div>
+
+                    <!-- Response Streaming -->
+                    <div class="settings-section">
+                        <h3>Response Streaming</h3>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="streaming-checkbox" onchange="saveSettings()">
+                            <span>Enable streaming responses (real-time text generation)</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Container -->
+        <main class="chat-container">
+            <div class="messages-wrapper">
+                <div id="chat-box" class="chat-box">
+                    <div class="welcome-message">
+                        <div class="welcome-content">
+                            <h2>Welcome to AI Assistant</h2>
+                            <p>Start a conversation or use special commands:</p>
+                            <div class="commands">
+                                <div class="command-item">
+                                    <span class="cmd">wiki</span> Get Wikipedia summaries
+                                </div>
+                                <div class="command-item">
+                                    <span class="cmd">search</span> Web search via DuckDuckGo
+                                </div>
+                                <div class="command-item">
+                                    <span class="cmd">arxiv</span> Research paper search
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Input Area -->
+            <div class="input-container">
+                <div class="input-wrapper">
+                    <input
+                        type="text"
+                        id="user-input"
+                        placeholder="Ask me anything..."
+                        class="message-input"
+                        autocomplete="off"
+                    />
+                    <button class="send-btn" onclick="sendMessage()" title="Send message (Enter)">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M16.6915026,12.4744748 L3.50612381,13.2599618 C3.19218622,13.2599618 3.03521743,13.4170592 3.03521743,13.5741566 L1.15159189,20.0151496 C0.8376543,20.8006365 0.99,21.89 1.77946707,22.52 C2.41,22.99 3.50612381,23.1 4.13399899,22.8429026 L21.714504,14.0454487 C22.6563168,13.5741566 23.1272231,12.6315722 22.9702544,11.6889879 L4.13399899,1.16592290486 C3.34915502,0.9 2.40734225,1.00636533 1.77946707,1.4776575 C0.994623095,2.10604706 0.837654326,3.0486314 1.15159189,3.99701575 L3.03521743,10.4380088 C3.03521743,10.5951061 3.19218622,10.7522035 3.50612381,10.7522035 L16.6915026,11.5376905 C16.6915026,11.5376905 17.1624089,11.5376905 17.1624089,12.0089827 C17.1624089,12.4744748 16.6915026,12.4744748 16.6915026,12.4744748 Z"/>
+                        </svg>
+                    </button>
+                </div>
+                <div class="input-info">Press Enter to send • Use commands: wiki, search, arxiv</div>
+            </div>
+        </main>
     </div>
-</div>
 
-<script src="script.js"></script>
-
-<script>
-    // Enter key to send
-    document.getElementById("user-input")
-        .addEventListener("keypress", function(e) {
-            if (e.key === "Enter") {
-                sendMessage();
-            }
-        });
-</script>
-
+    <script src="script.js"></script>
 </body>
 </html>
