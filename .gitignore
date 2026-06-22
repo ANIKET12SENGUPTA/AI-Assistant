@@ -2,3 +2,5 @@ venv/
 **__pycache__/
 *.pyc
 .env
+# ChromaDB
+backend/backend/chroma_data/
