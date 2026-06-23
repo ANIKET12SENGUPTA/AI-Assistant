@@ -1,4 +1,4 @@
-# AI Assistant Pro v2.0
+# AI Assistant
 
 **Intent-based multi-tool AI assistant** with automatic routing (like ChatGPT, Claude, Gemini)
 
